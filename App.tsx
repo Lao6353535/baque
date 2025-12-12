@@ -15,6 +15,8 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
   const key = `${suit.key}-${pos}-${val}`;
   const timeoutRef = useRef<any>(null);
   const isTouchRef = useRef(false);
+  const startTimeRef = useRef<number>(0);
+  const isMovedRef = useRef(false);
 
   // Mouse Handlers (Desktop)
   const handleMouseDown = () => {
@@ -37,9 +39,12 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
 
-  // Touch Handlers (Mobile)
+  // Touch Handlers (Mobile) - Optimized
   const handleTouchStart = () => {
       isTouchRef.current = true;
+      isMovedRef.current = false;
+      startTimeRef.current = Date.now();
+      
       timeoutRef.current = setTimeout(() => {
          onClick(key, true); // Long press
          timeoutRef.current = null;
@@ -50,8 +55,16 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
       // Prevent mouse emulation to avoid double clicks
       if (e.cancelable) e.preventDefault();
       
+      const duration = Date.now() - startTimeRef.current;
+
       if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+      }
+      
+      // Only trigger short click if duration < 500ms AND finger didn't move
+      // This prevents the 'increment' after a 'decrement' long press
+      if (duration < 500 && !isMovedRef.current) {
           onClick(key, false); // Short tap
       }
       
@@ -60,7 +73,8 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
   };
   
   const handleTouchMove = () => {
-      // If user drags/scrolls, cancel the tap/long-press
+      isMovedRef.current = true;
+      // If user drags/scrolls, cancel the long-press timer
       if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
@@ -107,6 +121,8 @@ interface LaiziButtonProps {
 const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => {
   const timeoutRef = useRef<any>(null);
   const isTouchRef = useRef(false);
+  const startTimeRef = useRef<number>(0);
+  const isMovedRef = useRef(false);
 
   const handleMouseDown = () => {
       if (isTouchRef.current) return;
@@ -130,6 +146,9 @@ const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => 
 
   const handleTouchStart = () => {
       isTouchRef.current = true;
+      isMovedRef.current = false;
+      startTimeRef.current = Date.now();
+      
       timeoutRef.current = setTimeout(() => {
          onClick(posKey, true);
          timeoutRef.current = null;
@@ -138,15 +157,24 @@ const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => 
 
   const handleTouchEnd = (e: React.TouchEvent) => {
       if (e.cancelable) e.preventDefault();
+
+      const duration = Date.now() - startTimeRef.current;
       
       if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+      }
+
+      // Only trigger short click if duration < 500ms AND finger didn't move
+      if (duration < 500 && !isMovedRef.current) {
           onClick(posKey, false);
       }
+
       setTimeout(() => isTouchRef.current = false, 500);
   };
   
   const handleTouchMove = () => {
+      isMovedRef.current = true;
       if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
