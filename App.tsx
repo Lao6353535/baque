@@ -17,6 +17,9 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
   const isTouchRef = useRef(false);
   const startTimeRef = useRef<number>(0);
   const isMovedRef = useRef(false);
+  const startXRef = useRef<number>(0);
+  const startYRef = useRef<number>(0);
+  const longPressTriggeredRef = useRef(false);
 
   // Mouse Handlers (Desktop)
   const handleMouseDown = () => {
@@ -40,12 +43,19 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
   };
 
   // Touch Handlers (Mobile) - Optimized
-  const handleTouchStart = () => {
+  const handleTouchStart = (e: React.TouchEvent) => {
       isTouchRef.current = true;
       isMovedRef.current = false;
+      longPressTriggeredRef.current = false;
       startTimeRef.current = Date.now();
       
+      if (e.touches[0]) {
+          startXRef.current = e.touches[0].clientX;
+          startYRef.current = e.touches[0].clientY;
+      }
+      
       timeoutRef.current = setTimeout(() => {
+         longPressTriggeredRef.current = true;
          onClick(key, true); // Long press
          timeoutRef.current = null;
       }, 500);
@@ -62,9 +72,11 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
           timeoutRef.current = null;
       }
       
-      // Only trigger short click if duration < 500ms AND finger didn't move
-      // This prevents the 'increment' after a 'decrement' long press
-      if (duration < 500 && !isMovedRef.current) {
+      // Logic:
+      // 1. Must not have moved significantly (isMovedRef)
+      // 2. Must not have triggered long press (longPressTriggeredRef)
+      // 3. Duration must be short (< 500ms)
+      if (!isMovedRef.current && !longPressTriggeredRef.current && duration < 500) {
           onClick(key, false); // Short tap
       }
       
@@ -72,12 +84,22 @@ const CardButton: React.FC<CardButtonProps> = ({ suit, pos, val, count, onClick 
       setTimeout(() => isTouchRef.current = false, 500);
   };
   
-  const handleTouchMove = () => {
-      isMovedRef.current = true;
-      // If user drags/scrolls, cancel the long-press timer
-      if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
+  const handleTouchMove = (e: React.TouchEvent) => {
+      if (e.touches[0]) {
+          const x = e.touches[0].clientX;
+          const y = e.touches[0].clientY;
+          const diffX = Math.abs(x - startXRef.current);
+          const diffY = Math.abs(y - startYRef.current);
+
+          // Threshold of 15px (increased buffer) to distinguish micro-movements from actual swipes/scrolls
+          if (diffX > 15 || diffY > 15) {
+              isMovedRef.current = true;
+              // If user drags/scrolls, cancel the long-press timer
+              if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current);
+                  timeoutRef.current = null;
+              }
+          }
       }
   };
 
@@ -123,6 +145,9 @@ const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => 
   const isTouchRef = useRef(false);
   const startTimeRef = useRef<number>(0);
   const isMovedRef = useRef(false);
+  const startXRef = useRef<number>(0);
+  const startYRef = useRef<number>(0);
+  const longPressTriggeredRef = useRef(false);
 
   const handleMouseDown = () => {
       if (isTouchRef.current) return;
@@ -144,12 +169,19 @@ const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
 
-  const handleTouchStart = () => {
+  const handleTouchStart = (e: React.TouchEvent) => {
       isTouchRef.current = true;
       isMovedRef.current = false;
+      longPressTriggeredRef.current = false;
       startTimeRef.current = Date.now();
       
+      if (e.touches[0]) {
+          startXRef.current = e.touches[0].clientX;
+          startYRef.current = e.touches[0].clientY;
+      }
+      
       timeoutRef.current = setTimeout(() => {
+         longPressTriggeredRef.current = true;
          onClick(posKey, true);
          timeoutRef.current = null;
       }, 500);
@@ -165,19 +197,31 @@ const LaiziButton: React.FC<LaiziButtonProps> = ({ posKey, count, onClick }) => 
           timeoutRef.current = null;
       }
 
-      // Only trigger short click if duration < 500ms AND finger didn't move
-      if (duration < 500 && !isMovedRef.current) {
+      // Logic:
+      // 1. Must not have moved significantly (isMovedRef)
+      // 2. Must not have triggered long press (longPressTriggeredRef)
+      // 3. Duration must be short (< 500ms)
+      if (!isMovedRef.current && !longPressTriggeredRef.current && duration < 500) {
           onClick(posKey, false);
       }
 
       setTimeout(() => isTouchRef.current = false, 500);
   };
   
-  const handleTouchMove = () => {
-      isMovedRef.current = true;
-      if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
+  const handleTouchMove = (e: React.TouchEvent) => {
+      if (e.touches[0]) {
+          const x = e.touches[0].clientX;
+          const y = e.touches[0].clientY;
+          const diffX = Math.abs(x - startXRef.current);
+          const diffY = Math.abs(y - startYRef.current);
+
+          if (diffX > 15 || diffY > 15) {
+              isMovedRef.current = true;
+              if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current);
+                  timeoutRef.current = null;
+              }
+          }
       }
   };
 
@@ -209,6 +253,7 @@ export default function App() {
   const [counts, setCounts] = useState<CardState>({});
   const [laizi, setLaizi] = useState<LaiziState>({ up: 0, middle: 0, down: 0 });
   const [summary, setSummary] = useState<ReactNode>("请点击牌面记录各玩家的牌，然后点击\"计算统计\"按钮查看结果。\n\n点击增加，长按减少。");
+  const [viewMode, setViewMode] = useState<'text' | 'stats' | Position>('text');
   const [showModal, setShowModal] = useState<'help' | 'strategy' | 'qa' | null>(null);
   
   // Initialize qaDb from localStorage or default
@@ -293,49 +338,55 @@ export default function App() {
     playSound('clear');
     setCounts({});
     setLaizi({ up: 0, middle: 0, down: 0 });
-    setSummary("请点击牌面记录各玩家的牌。\n点击增加，长按减少。");
+    setSummary("请点击牌面记录各玩家的牌，然后点击\"计算统计\"按钮查看结果。\n\n点击增加，长按减少。");
+    setViewMode('text');
   };
 
   const calculate = () => {
-    try {
-      // Aggregations
-      const playerTotals: Record<Position, number> = { up: 0, middle: 0, down: 0 };
-      const suitTotals: Record<SuitKey, number> = { 'black-peach': 0, 'red-peach': 0, 'plum-flower': 0, 'square': 0 };
-      
-      let grandTotal = 0;
+    // Validation logic only
+    let grandTotal = 0;
+    const suitTotals: Record<SuitKey, number> = { 'black-peach': 0, 'red-peach': 0, 'plum-flower': 0, 'square': 0 };
 
-      Object.entries(counts).forEach(([key, value]) => {
+    Object.entries(counts).forEach(([key, value]) => {
         const count = value as number;
-        const parts = key.split('-');
-        let suit: SuitKey = 'black-peach'; // default
-        let pos: Position = 'up';
-        
         // Find matching suit prefix
+        let suit: SuitKey = 'black-peach'; // default
         for(const s of SUITS) {
             if (key.startsWith(s.key)) {
                 suit = s.key;
                 break;
             }
         }
-        
-        // Extract position
-        if (key.includes('-up-')) pos = 'up';
-        else if (key.includes('-middle-')) pos = 'middle';
-        else if (key.includes('-down-')) pos = 'down';
-        
-        playerTotals[pos] += count;
         suitTotals[suit] += count;
         grandTotal += count;
+    });
+
+    if (grandTotal > 104) { alert("总牌数超过104张！"); return; }
+    if (Object.values(suitTotals).some(t => t > 26)) { alert("某种花色超过26张！"); return; }
+      
+    playSound('success');
+    setViewMode('stats');
+  };
+
+  const switchToPosition = (pos: Position) => {
+      playSound('tap');
+      setViewMode(pos);
+  };
+
+  // Helper to render the stats grid dynamically
+  const renderStats = () => {
+      const playerTotals: Record<Position, number> = { up: 0, middle: 0, down: 0 };
+      
+      Object.entries(counts).forEach(([key, value]) => {
+          const count = value as number;
+          let pos: Position = 'up';
+          if (key.includes('-up-')) pos = 'up';
+          else if (key.includes('-middle-')) pos = 'middle';
+          else if (key.includes('-down-')) pos = 'down';
+          playerTotals[pos] += count;
       });
 
-      // Validations
-      if (grandTotal > 104) { alert("总牌数超过104张！"); return; }
-      if (Object.values(suitTotals).some(t => t > 26)) { alert("某种花色超过26张！"); return; }
-      
-      playSound('success');
-
-      // Generate Structured Grid Layout
-      const resultGrid = (
+      return (
         <div className="flex flex-row w-full h-full text-xs sm:text-sm items-stretch">
             {POSITIONS.map((pos, index) => {
                 const total = playerTotals[pos.key] + laizi[pos.key];
@@ -393,15 +444,10 @@ export default function App() {
             })}
         </div>
       );
-
-      setSummary(resultGrid);
-
-    } catch (e) {
-      alert("计算错误");
-    }
   };
 
-  const calculatePosition = (pos: Position) => {
+  // Helper to render the position detail view dynamically
+  const renderPosition = (pos: Position) => {
       let totalCards = laizi[pos];
       const suitDetails: Record<SuitKey, string> = { 'black-peach': '', 'red-peach': '', 'plum-flower': '', 'square': '' };
       const suitCounts: Record<SuitKey, number> = { 'black-peach': 0, 'red-peach': 0, 'plum-flower': 0, 'square': 0 };
@@ -422,7 +468,7 @@ export default function App() {
 
       const posName = POSITIONS.find(p => p.key === pos)?.name;
       
-      const resultView = (
+      return (
         <div className="flex flex-col w-full h-full justify-center">
             <div className="w-full">
                 <div className="font-bold border-b pb-1 mb-1 text-center bg-gray-50 rounded-t text-sm">
@@ -460,14 +506,13 @@ export default function App() {
             </div>
         </div>
       );
-
-      setSummary(resultView);
   };
 
   const handleStrategySubmit = () => {
       if (!strategyInput.trim()) return;
       const ans = findStrategyAnswer(strategyInput, qaDb);
       setSummary(ans);
+      setViewMode('text');
       setShowModal(null);
   };
 
@@ -589,7 +634,7 @@ export default function App() {
                 {POSITIONS.map(pos => (
                     <div key={pos.key} className="bg-white border rounded p-1 flex flex-row items-center justify-between gap-1 overflow-hidden">
                         <button 
-                            onClick={() => { playSound('tap'); calculatePosition(pos.key as Position); }}
+                            onClick={() => switchToPosition(pos.key as Position)}
                             className="bg-[#8A2BE2] text-white text-xs px-1 py-1 rounded flex-1 truncate active:opacity-80 touch-manipulation"
                         >
                             {pos.name}
@@ -635,11 +680,11 @@ export default function App() {
          {/* Summary Area with Safe Area Padding */}
          <div className="flex-1 lg:flex-none lg:h-full lg:w-1/3 bg-gray-50 border-t lg:border-t-0 lg:border-l p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-hidden lg:overflow-y-auto no-scrollbar shadow-inner">
              <div className="bg-white border p-2 h-full rounded overflow-hidden lg:overflow-auto no-scrollbar text-sm shadow-sm">
-                 {typeof summary === 'string' ? (
-                     <div className="whitespace-pre-wrap font-mono">{summary}</div>
-                 ) : (
-                     summary
+                 {viewMode === 'text' && (
+                     typeof summary === 'string' ? <div className="whitespace-pre-wrap font-mono">{summary}</div> : summary
                  )}
+                 {viewMode === 'stats' && renderStats()}
+                 {['up', 'middle', 'down'].includes(viewMode) && renderPosition(viewMode as Position)}
              </div>
          </div>
       </div>
