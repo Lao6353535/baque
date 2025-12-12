@@ -1,7 +1,7 @@
 {
   "name": "八雀牌记牌器",
   "short_name": "八雀记牌",
-  "start_url": ".",
+  "start_url": "/", 
   "display": "standalone",
   "background_color": "#f8f8f8",
   "theme_color": "#ffffff",
