@@ -1,0 +1,5 @@
+{
+  "name": "Baque Card Counter",
+  "description": "A professional card counting tool for Baque/Double Deck games, ported from Python to iOS Web App.",
+  "requestFramePermissions": []
+}

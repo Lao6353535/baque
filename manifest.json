@@ -1,0 +1,21 @@
+{
+  "name": "八雀牌记牌器",
+  "short_name": "八雀记牌",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8f8f8",
+  "theme_color": "#ffffff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/4CAF50/ffffff?text=8",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/4CAF50/ffffff?text=8",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
