@@ -347,7 +347,7 @@ export default function App() {
                         </div>
                         
                         {/* Suits */}
-                        <div className="flex-1 space-y-1 overflow-y-auto">
+                        <div className="flex-1 space-y-1 overflow-y-auto no-scrollbar">
                             {SUITS.map(suit => {
                                 const cards: string[] = [];
                                 let suitCount = 0;
@@ -574,7 +574,7 @@ export default function App() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
          {/* Main Card Table */}
-         <div className="flex-initial lg:flex-1 flex flex-col overflow-y-auto p-1 bg-white">
+         <div className="flex-initial lg:flex-1 flex flex-col overflow-y-auto no-scrollbar p-1 bg-white">
             
             {/* Table Header */}
             <div className="grid grid-cols-[3rem_1fr_1fr_1fr] gap-1 mb-1 text-center font-bold text-sm bg-gray-50 sticky top-0 z-0">
@@ -633,8 +633,8 @@ export default function App() {
          </div>
 
          {/* Summary Area with Safe Area Padding */}
-         <div className="flex-1 lg:flex-none lg:h-full lg:w-1/3 bg-gray-50 border-t lg:border-t-0 lg:border-l p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-y-auto shadow-inner">
-             <div className="bg-white border p-2 h-full rounded overflow-auto text-sm shadow-sm">
+         <div className="flex-1 lg:flex-none lg:h-full lg:w-1/3 bg-gray-50 border-t lg:border-t-0 lg:border-l p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] overflow-hidden lg:overflow-y-auto no-scrollbar shadow-inner">
+             <div className="bg-white border p-2 h-full rounded overflow-hidden lg:overflow-auto no-scrollbar text-sm shadow-sm">
                  {typeof summary === 'string' ? (
                      <div className="whitespace-pre-wrap font-mono">{summary}</div>
                  ) : (
@@ -649,7 +649,7 @@ export default function App() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
                   <div className="p-4 border-b font-bold text-lg">帮助</div>
-                  <div className="p-4 overflow-y-auto text-sm space-y-3 flex-1">
+                  <div className="p-4 overflow-y-auto no-scrollbar text-sm space-y-3 flex-1">
                       <p>1. 点击牌面 +1 (绿色)，长按或开启"减模式" -1。</p>
                       <p>2. 点击顶部【上家/对家/下家】可查看单人详情。</p>
                       <p>3. 点击【计算统计】查看当前局面的完整分析。</p>
@@ -666,7 +666,7 @@ export default function App() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
                   <div className="p-4 border-b font-bold text-lg">牌型查分</div>
-                  <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+                  <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
                       <input 
                           type="text" 
                           placeholder="输入如: K32b220 或 6张6"
@@ -694,7 +694,7 @@ export default function App() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                   <div className="p-4 border-b font-bold text-lg text-center">问答录入</div>
-                  <div className="p-4 flex-1 overflow-y-auto flex flex-col space-y-4">
+                  <div className="p-4 flex-1 overflow-y-auto no-scrollbar flex flex-col space-y-4">
                       {!showQaList ? (
                           <>
                             <div className="flex flex-col space-y-1">
@@ -720,7 +720,7 @@ export default function App() {
                                 <h3 className="font-bold">问答库 ({qaDb.length})</h3>
                                 <button onClick={() => setShowQaList(false)} className="text-blue-500 text-sm">返回录入</button>
                              </div>
-                             <div className="overflow-y-auto h-full space-y-2 max-h-[50vh]">
+                             <div className="overflow-y-auto no-scrollbar h-full space-y-2 max-h-[50vh]">
                                 {qaDb.map((entry, idx) => (
                                     <div key={`${entry.question}-${idx}`} className="border p-2 rounded text-sm flex justify-between items-center bg-gray-50">
                                         <div className="truncate flex-1 mr-2">
